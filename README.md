@@ -1,3 +1,9 @@
+title: Caption Gen
+emoji: 📸
+sdk: streamlit
+sdk_version: 1.43.0
+app_file: app.py
+
 
 # CV Analyzer (AI-Powered Resume Parser)
 
