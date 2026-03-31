@@ -1,4 +1,4 @@
-```markdown
+
 # CV Analyzer (AI-Powered Resume Parser)
 
 A Streamlit-based app that extracts structured data from CVs (PDF) using **Docling + Agentic AI + Pydantic schema**, and converts it into a clean, downloadable CSV.
@@ -29,8 +29,6 @@ A Streamlit-based app that extracts structured data from CVs (PDF) using **Docli
 
 ## Project Structure
 
-```
-
 cv-analyzer-space/
 │
 ├── app.py                     # Streamlit entry point
@@ -55,7 +53,6 @@ cv-analyzer-space/
 ├── data/
 │   └── uploads/
 
-````
 
 ---
 
