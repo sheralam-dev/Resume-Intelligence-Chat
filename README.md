@@ -27,35 +27,6 @@ A Streamlit-based app that extracts structured data from CVs (PDF) using **Docli
 
 ---
 
-## Project Structure
-
-cv-analyzer-space/
-│
-├── app.py                     # Streamlit entry point
-├── requirements.txt
-├── README.md
-│
-├── core/
-│   ├── config.py
-│
-│   ├── ingestion/
-│   │   └── docling_loader.py
-│
-│   ├── parsing/
-│   │   ├── schema.py
-│   │   └── extractor.py
-│
-│   ├── processing/
-│   │   └── dataframe.py
-│
-│   └── utils/
-│
-├── data/
-│   └── uploads/
-
-
----
-
 ## Setup
 
 ### 1. Clone repo
