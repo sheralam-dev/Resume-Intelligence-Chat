@@ -1,13 +1,13 @@
 from pydantic_ai import Agent
 from pydantic_ai.models.huggingface import HuggingFaceModel
 from pydantic_ai.providers.openai import OpenAIProvider
-
-from core.parsing.schema import Resume
-
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+from core.parsing.schema import Resume
+
+
+load_dotenv() # unnecessary if deployed on huggingface space.
 api_key = os.environ["HF_TOKEN"]   # raises error if missing
 
 
