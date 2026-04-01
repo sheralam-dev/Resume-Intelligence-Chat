@@ -25,6 +25,7 @@ agent = Agent(
     model=model,
     system_prompt=(
             'You are an expert resume extractor.'
+            'If the context is not a Resume return null and DO NOT infer or hallucinate.'
             'Do NOT infer or hallucinate missing sections.'
             'If a section is not explicitly present, return null or empty list.'
         ),
