@@ -28,3 +28,7 @@ build/
 # IDE
 .vscode/
 .idea/
+
+
+# ignore dockerfile for github upload.
+Dockerfile

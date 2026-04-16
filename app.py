@@ -1,92 +1,102 @@
-import streamlit as st
-import pandas as pd
-import tempfile
+import ast
 
+import streamlit as st
+import tempfile
+import os
+
+from core.chains import generate_sql_query, generate_nl_answer
 from core.ingestion.docling_loader import load_and_convert_cv
 from core.parsing.extractor import extract_resume
-from core.processing.dataframe import resume_to_df, resume_to_dfs
-
-st.title("📊 Resume Data Extractor")
-
-# ---- session state init ----
-if "processed" not in st.session_state:
-    st.session_state.processed = False
-if "dfs" not in st.session_state:
-    st.session_state.dfs = None
-
-uploaded_file = st.file_uploader("Upload CV (PDF)", type=["pdf"])
+from core.parsing.schema import Resume
+from core.processing.database import resume_to_sqlite
+from langchain_community.utilities import SQLDatabase
 
 
-if not uploaded_file:
-    st.session_state.processed = False
-    st.session_state.dfs = None
+@st.cache_resource
+def get_db():
+    return SQLDatabase.from_uri("sqlite:///data/db/resumes.db")
 
+st.set_page_config(page_title="Resume AI Assistant", layout="wide")
+st.title("🤖 Resume Intelligence Chat")
 
-# ---- process only once ----
-if uploaded_file and not st.session_state.processed:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(uploaded_file.read())
-        pdf_path = tmp.name
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-    text = load_and_convert_cv(pdf_path)
-    data = extract_resume(text)
-    dfs = resume_to_dfs(data)
-
-    st.session_state.data = data
-    st.session_state.dfs = dfs
-    st.session_state.processed = True
-
-# ---- display from session (no recompute) ----
-if st.session_state.processed and st.session_state.dfs is not None:
-    dfs = st.session_state.dfs
-    data = st.session_state.data # Ensure data is pulled from state
-
-    
-    # Extract row from 'base' dataframe (assuming it's a single-row DF)
-    base_data = dfs['base'].iloc[0]
-    
-
-    st.subheader("Candidate Profile")
-    col_spacer, col_content = st.columns([0.01, 0.99])
-    with col_content:
-        st.write(f"**Name:** {base_data.get('full_name', 'N/A')}")
-        
-        # Iterate through contact fields (the ones prefixed with contact_)
-        contact_fields = {k.replace("contact_", "").title(): v for k, v in base_data.items() if k.startswith("contact_") and v}
-        for label, value in contact_fields.items():
-            st.write(f"**{label}:** {value}")
-
-        st.write(f"**AI/ML Skills:** {base_data.get('ai_ml_skills') or 'N/A'}")
-        st.write(f"**Technical Skills:** {base_data.get('technical_skills') or 'N/A'}")
-        st.write(f"**Certifications:** {base_data.get('certifications') or 'N/A'}")
-        
-        if base_data.get("summary"):
-            st.info(f"**Summary:** {base_data['summary']}")
-
-
-    # Display other tables (Experience, Education, etc.)
-    for label, df in dfs.items():
-        if label == "base":
-            continue 
-        st.subheader(label.replace("_", " ").title())
-        st.dataframe(df, use_container_width=True)
-
-    # Download Button
-    df_full = resume_to_df(data)
-    csv = df_full.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        "Download CSV",
-        data=csv,
-        file_name=f"analyzed_{uploaded_file.name}.csv",
-        mime="text/csv"
+# Sidebar for File Uploads
+with st.sidebar:
+    st.header("Upload Center")
+    uploaded_files = st.file_uploader(
+        "Upload PDF Resumes",
+        type=["pdf"],
+        accept_multiple_files=True
     )
 
+    if uploaded_files and st.button("Process & Index Resumes"):
+        os.makedirs("data/db", exist_ok=True)
+        with st.spinner(f"Indexing {len(uploaded_files)} resumes..."):
+            for uploaded_file in uploaded_files:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                    tmp.write(uploaded_file.getbuffer())
+                    pdf_path = tmp.name
+                try:
+                    text = load_and_convert_cv(pdf_path)
+                    data: Resume = extract_resume(text)
+                    resume_to_sqlite(data, "data/db/resumes.db")
+                finally:
+                    os.remove(pdf_path)
+        st.success("Indexing complete!")
 
+    st.divider()
 
+    confirm = st.checkbox("Confirm delete database")
+    # DELETE DB BUTTON
+    if st.button("🗑️ Delete Database"):
+        if confirm:
+            tables = get_db().run("select name from sqlite_master where type='table';")
+            # tables = "[('resume_base',), ('contact',), ('certifications',), ('education',), ('experience',), ('projects',)]"
+            tables = ast.literal_eval(tables)
+            for table in tables:
+                get_db().run(f"drop table if exists {table[0]};")
+            st.success("All tables dropped successfully.")
+        else:
+            st.warning("Please confirm deletion first.")
 
-# "full_name": r.get("full_name"),
-# "summary": r.get("summary"),
-# **{f"contact_{k}": v for k, v in (r.get("contact") or {}).items()},
-# "ai_ml_skills"
-# "technical_skills"
-# "certifications"
+# Display chat history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Chat Input
+if prompt := st.chat_input("Ask about your resumes (e.g., 'List all candidates names')"):
+    # Add user message to history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Generate response
+    with st.chat_message("assistant"):
+        with st.spinner("Analyzing database..."):
+            try:
+                # create sql query for the user query
+                sql_query = generate_sql_query(prompt).strip()
+                # sql_query = "select name from resume_base;" # fake query
+                print('sql_query: ', sql_query)
+                if sql_query == "IRRELEVANT QUERY":
+                    response = "This question is outside the resume database scope."
+                elif not sql_query.upper().startswith(("SELECT", "WITH")):
+                    raise ValueError("Invalid SQL generated")
+                else:
+                    db_result = get_db().run(sql_query)
+                    if not db_result:
+                        db_result = "NO_DATA"
+                    # create a natural language response based on db results. 
+                    response = generate_nl_answer(prompt, db_result)
+                    # response = db_result # fake response
+                    print('response generated')
+                st.markdown(response)
+                st.code(sql_query, language="sql", width="content")  # show query
+                st.session_state.messages.append({"role": "assistant", "content": response})
+            except Exception as e:
+                error_msg = f"Sorry, I ran into an error: {str(e)}"
+                st.error(error_msg)

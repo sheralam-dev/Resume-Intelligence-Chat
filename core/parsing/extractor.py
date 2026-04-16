@@ -1,28 +1,11 @@
 from pydantic_ai import Agent
-from pydantic_ai.models.huggingface import HuggingFaceModel
-from pydantic_ai.providers.openai import OpenAIProvider
-from dotenv import load_dotenv
-import os
 
 from core.parsing.schema import Resume
-
-
-load_dotenv() # unnecessary if deployed on huggingface space.
-api_key = os.environ["HF_TOKEN"]   # raises error if missing
-
-
-
-model = HuggingFaceModel(
-    'Qwen/Qwen2.5-7B-Instruct',
-    provider=OpenAIProvider(
-        base_url="https://router.huggingface.co/v1",
-        api_key=api_key
-        )
-    )
+from core.llm_model import model1
 
 
 agent = Agent(
-    model=model,
+    model=model1,
     system_prompt=(
             'You are an expert resume extractor.'
             'If the context is not a Resume return null and DO NOT infer or hallucinate.'
@@ -34,5 +17,14 @@ agent = Agent(
 
 
 def extract_resume(text: str) -> Resume:
+    '''
+    Extract data from text using pydantic ai agent. 
+    
+    Args:
+        text (str): Text extracted from resume (using parser eg. Docling)
+        
+    Returns:
+        Resume: Structured schema for resume
+    '''
     result = agent.run_sync(text)
     return result.output

@@ -11,9 +11,7 @@ def get_converter():
     """
     return DocumentConverter(
         format_options={
-            "pdf": PdfFormatOption(
-                enable_ocr=False
-            )
+            "pdf": PdfFormatOption(enable_ocr=False)
         }
     )
 
