@@ -1,20 +1,9 @@
-# Docling
-docling
-
-streamlit
-pandas
-python-dotenv
-
-# Pydantic AI stack
-pydantic
-pydantic-ai
-
-# HF ecosystem (important: keep older compatible versions)
-transformers
-huggingface-hub
-tokenizers
-
-
-# Optional but often required by docling
-torch
-numpy
+docling==2.82.0
+langchain_community==0.4.1
+langchain_core==1.2.31
+langchain_openai==1.1.14
+pandas==3.0.2
+pydantic==2.13.1
+pydantic_ai==1.83.0
+python-dotenv==1.2.2
+streamlit==1.55.0
