@@ -1,5 +1,5 @@
 ---
-title: CV-Extractor
+title: Resume-Intelligence-Chat
 emoji: 📸
 sdk: streamlit
 sdk_version: 1.37.1
