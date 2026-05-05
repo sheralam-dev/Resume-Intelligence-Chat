@@ -8,6 +8,7 @@ agent = Agent(
     model=model1,
     system_prompt=(
             'You are an expert resume extractor.'
+            'If a specific data point (like a GPA or Graduation Year) is missing, return null for that field, but do not omit the entire section if the Degree or Institution is present.'
             'If the context is not a Resume return null and DO NOT infer or hallucinate.'
             'Do NOT infer or hallucinate missing sections.'
             'If a section is not explicitly present, return null or empty list.'
