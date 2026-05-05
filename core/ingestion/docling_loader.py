@@ -12,7 +12,8 @@ def get_converter():
     return DocumentConverter(
         format_options={
             "pdf": PdfFormatOption(
-                enable_ocr=False,
+                # enable_ocr=False,
+                ocr_options=None,                 # IMPORTANT: disables OCR engine entirely
                 enable_table_structure=False  # ADD THIS
             )
         }
