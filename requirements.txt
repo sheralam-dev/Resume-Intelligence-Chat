@@ -2,7 +2,7 @@ docling==2.82.0
 langchain_community==0.4.1
 langchain_core==1.2.31
 langchain_openai==1.1.14
-pandas==3.0.2
+pandas>=2.1.4,<3.0.0
 pydantic==2.13.1
 pydantic_ai==1.83.0
 python-dotenv==1.2.2
