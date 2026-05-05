@@ -7,6 +7,7 @@ pydantic==2.13.1
 pydantic-ai-slim[openai]==1.83.0
 python-dotenv==1.2.2
 streamlit==1.55.0
+opencv-python-headless # docling → uses docling_ibm_models. That internally requires cv2 (OpenCV). Not auto-installed in some environments (like Streamlit Cloud)
 
 
 # pydantic_ai==1.83.0 # This package automatically installs many extras, including Hugging Face support, which pulls:
