@@ -4,6 +4,14 @@ langchain_core==1.2.31
 langchain_openai==1.1.14
 pandas>=2.1.4,<3.0.0
 pydantic==2.13.1
-pydantic_ai==1.83.0
+pydantic-ai-slim[openai]==1.83.0
 python-dotenv==1.2.2
 streamlit==1.55.0
+
+
+# pydantic_ai==1.83.0 # This package automatically installs many extras, including Hugging Face support, which pulls:
+# huggingface_hub >= 1.3.4
+# That conflicts with:
+# docling==2.82.0 → huggingface_hub < 1
+# Solution: replaced it with the following
+# pydantic-ai-slim[openai]==1.83.0
